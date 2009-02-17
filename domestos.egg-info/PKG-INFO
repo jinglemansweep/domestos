@@ -1,0 +1,18 @@
+Metadata-Version: 1.0
+Name: domestos
+Version: 0.102
+Summary: DomestOS
+Home-page: http://www.louisking.co.uk
+Author: Louis King
+Author-email: jinglemansweep@gmail.com
+License: UNKNOWN
+Description: DomestOS Home Automation Platform
+Platform: UNKNOWN
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: GNU General Public License (GPL)
+Classifier: Natural Language :: English
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: Python :: 2.5
+Classifier: Topic :: System :: Networking :: Monitoring

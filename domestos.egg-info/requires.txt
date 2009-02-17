@@ -1,0 +1,5 @@
+Pyro
+amara
+springpython
+sqlalchemy >= 0.5
+Elixir >= 0.6
