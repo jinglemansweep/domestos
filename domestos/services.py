@@ -11,15 +11,18 @@ class BasicService(object):
   
     """ Basic Service """
     
-    def __init__(self, cfg, db, debug, logger, reactor):
+    def __init__(self, cfg, db, debug, factory, logger, protocols, reactor):
 
         self.cfg = cfg
         self.db = db
         self.debug = debug
+        self.factory = factory
         self.logger = logger
+        self.protocols = protocols
         self.reactor = reactor
 
         self.logger.info("Service initialised")
+        self.logger.debug("Protocols: %s" % (self.protocols))
         
         
     def run(self):                              
@@ -31,7 +34,10 @@ class BasicService(object):
         hour = task.LoopingCall(self.every_hour).start(1.0 * 60 * 60)
         day = task.LoopingCall(self.every_day).start(1.0 * 60 * 60 * 24)        
         week = task.LoopingCall(self.every_week).start(1.0 * 60 * 60 * 24 * 7) 
-        
+
+        echo_factory = self.factory()
+        echo_factory.protocol = self.protocols[0]
+        self.reactor.listenTCP(8007, echo_factory)        
         self.reactor.run()
 
 

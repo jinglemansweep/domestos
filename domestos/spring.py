@@ -9,9 +9,11 @@ from sqlalchemy.orm import sessionmaker, mapper, relation
 from sqlalchemy.databases import mysql 
 from twisted.internet import reactor
 from twisted.internet import task
+from twisted.internet.protocol import Protocol, Factory
 
 from domestos.helpers import *
 from domestos.plugins import *
+from domestos.protocols import *
 from domestos.schemas import *
 from domestos.services import *
 from domestos.utils import logsetup
@@ -41,8 +43,16 @@ class CoreApplicationContext(PythonConfig):
         return logsetup()
 
     @Object(scope.SINGLETON)
-    def Reactor(self):
+    def TwistedReactor(self):
         return reactor
+
+    @Object(scope.SINGLETON)
+    def TwistedFactory(self):
+        return Factory    
+    
+    @Object(scope.SINGLETON)
+    def EchoProtocol(self):
+        return Echo(logger=self.Logger())
     
     @Object(scope.SINGLETON)
     def DBMetaData(self):
@@ -64,19 +74,28 @@ class CoreApplicationContext(PythonConfig):
 
     @Object(scope.SINGLETON)
     def DBSchema(self):
-        return DefaultDBSchema(db=self.DBSession(), engine=self.DBEngine(), logger=self.Logger(), metadata=self.DBMetaData())
+        return DefaultDBSchema(db=self.DBSession(), 
+                               engine=self.DBEngine(), 
+                               logger=self.Logger(), 
+                               metadata=self.DBMetaData())
     
     # Services
     
     @Object(scope.SINGLETON)
     def CoreService(self):
-        cfg = self.DefaultConfiguration()
-        usercode_dir = os.path.join(os.path.expanduser("~"), ".%s" % (cfg["app_name"]), "usercode")
-        return BasicService(cfg=self.DefaultConfiguration(), debug=self.debug, db=self.DBSession(), logger=self.Logger(), reactor=self.Reactor())
+        protocols = [self.EchoProtocol,]
+        return BasicService(cfg=self.DefaultConfiguration(), 
+                            debug=self.debug, 
+                            db=self.DBSession(), 
+                            factory=self.TwistedFactory(),
+                            logger=self.Logger(),
+                            protocols=protocols,
+                            reactor=self.TwistedReactor())
     
     # Plugins
     
     @Object(scope.PROTOTYPE)
     def DummyPlugin(self):
-        return DummyPlugin(db=self.DBSession(), logger=self.Logger())       
+        return DummyPlugin(db=self.DBSession(), 
+                           logger=self.Logger())       
 
