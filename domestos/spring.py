@@ -7,6 +7,8 @@ from springpython.context import scope
 from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData, ForeignKey
 from sqlalchemy.orm import sessionmaker, mapper, relation
 from sqlalchemy.databases import mysql 
+from twisted.internet import reactor
+from twisted.internet import task
 
 from domestos.helpers import *
 from domestos.plugins import *
@@ -19,17 +21,29 @@ class CoreApplicationContext(PythonConfig):
     def __init__(self, debug):
         super(CoreApplicationContext, self).__init__()
         self.debug = debug
+
+    # Configuration
         
     @Object(scope.SINGLETON)
-    def CoreService(self):
-        cfg = self.DefaultConfiguration()
-        usercode_dir = os.path.join(os.path.expanduser("~"), ".%s" % (cfg["app_name"]), "usercode")
-        return BasicService(logger=self.Logger(), db_session=self.DBSession(), usercode_dir=usercode_dir, debug=self.debug)
-
+    def DefaultConfiguration(self):
+        cfg = {
+            "app_name": "domestos",
+            "db_type": "sqlite",
+            "db_username": None,
+            "db_password": None,
+        }
+        return cfg
+        
+    # Basics
+        
     @Object(scope.SINGLETON)
     def Logger(self):
         return logsetup()
 
+    @Object(scope.SINGLETON)
+    def Reactor(self):
+        return reactor
+    
     @Object(scope.SINGLETON)
     def DBMetaData(self):
         return MetaData()
@@ -50,21 +64,19 @@ class CoreApplicationContext(PythonConfig):
 
     @Object(scope.SINGLETON)
     def DBSchema(self):
-        return DefaultDBSchema(engine=self.DBEngine(), metadata=self.DBMetaData(), db_session=self.DBSession(), logger=self.Logger())
+        return DefaultDBSchema(db=self.DBSession(), engine=self.DBEngine(), logger=self.Logger(), metadata=self.DBMetaData())
+    
+    # Services
     
     @Object(scope.SINGLETON)
-    def DefaultConfiguration(self):
-        cfg = {
-            "app_name": "domestos",
-            "db_type": "sqlite",
-            "db_username": None,
-            "db_password": None,
-        }
-        return cfg
+    def CoreService(self):
+        cfg = self.DefaultConfiguration()
+        usercode_dir = os.path.join(os.path.expanduser("~"), ".%s" % (cfg["app_name"]), "usercode")
+        return BasicService(cfg=self.DefaultConfiguration(), debug=self.debug, db=self.DBSession(), logger=self.Logger(), reactor=self.Reactor())
+    
+    # Plugins
     
     @Object(scope.PROTOTYPE)
     def DummyPlugin(self):
-        return DummyPlugin(logger=self.Logger(), db_session=self.DBSession())       
+        return DummyPlugin(db=self.DBSession(), logger=self.Logger())       
 
-    def NotExposed(self):
-        pass

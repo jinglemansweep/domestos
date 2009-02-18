@@ -1,16 +1,17 @@
 from springpython.context import ApplicationContext
+
 from domestos.spring import *
 
 # Tables
 
 class DefaultDBSchema(object):
 
-     def __init__(self, metadata, engine, db_session, logger):
+     def __init__(self, db, engine, logger, metadata):
 
-          self.metadata = metadata
+          self.db = db
           self.engine = engine
-          self.db = db_session
           self.logger = logger
+          self.metadata = metadata
 
           self.device_table = Table("device", self.metadata,
                Column("id", Integer, primary_key=True),
@@ -28,18 +29,27 @@ class DefaultDBSchema(object):
                Column("device_id", Integer, ForeignKey("device.id"), primary_key=True),
                Column("zone_id", Integer, ForeignKey("zone.id"), primary_key=True),
           )
+          
+          self.event_table = Table("event", self.metadata,
+               Column("id", Integer, primary_key=True),
+               Column("type", String),
+               Column("address", String),                                   
+          )
 
           mapper(Device, self.device_table)
+          
           mapper(Zone, self.zone_table, properties = {
                "devices": relation(Device, secondary=self.device_zone_table, backref="zones"),
           })
          
 
      def create_schema(self):
+          
           self.logger.info("Creating initial database schema")
           self.metadata.create_all(self.engine) 
      
      def load_test_data(self):
+          
           self.logger.info("Loading test data")
           lounge_lamp_left = Device("A1", "Lounge Lamp Left")
           lounge_lamp_right = Device("A2", "Lounge Lamp Right")
@@ -55,19 +65,26 @@ class DefaultDBSchema(object):
 # Models
 
 class Device(object):
+     
      def __init__(self, address, description):
+
           self.address = address
           self.description = description
 
      def __repr__(self):
+
           return "<Device('%s','%s')>" % (self.address, self.description)
 
+
 class Zone(object):
+
      def __init__(self, name, description):
+
           self.name = name;
           self.description = description
      
      def __repr__(self):
+          
           return "<Zone('%s','%s')>" % (self.name, self.description)
                
 

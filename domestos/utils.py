@@ -1,6 +1,7 @@
 import logging
 
 def logsetup():
+    
     logger = logging.getLogger("domestos")
     logger.handlers = []
     formatter = logging.Formatter('[%(asctime)s] %(module)s\t%(levelname)-8s%(message)s', '%Y-%m-%d %H:%M:%S',)

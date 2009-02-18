@@ -1,17 +1,16 @@
 
 
 class BasePlugin(object):
-    """
-    Base Plugin
-    """
 
-    def __init__(self, logger, db_session, payload=None):
+    def __init__(self, db, logger, payload=None):
+
+        self.db = db        
         self.logger = logger
-        self.db_session = db_session
         self.payload = payload or []
         self.errors = []
 
     def is_valid(self):
+        
         errors = []
         for param in self.PARAMETERS:
             if param not in self.payload:
