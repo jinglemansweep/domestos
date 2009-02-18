@@ -4,6 +4,8 @@ daynames = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
 
 class DTCompare(object):
 
+    """ Helper that returns whether or not current date/time matches parameters passed in """
+    
     def __init__(self, **kwargs):
 
         now = datetime.datetime.now()
@@ -35,8 +37,12 @@ class DTCompare(object):
     
 class DT(object):
     
+    """ Current Date/Time mapper containing latest and previous time unit changes (e.g. new second, new minute) """
+    
     def __init__(self):
+
         now = datetime.datetime.now()
+
         self.dict = {
             "now": (now, now),
             "year": (now.year, now.year), 
@@ -51,8 +57,11 @@ class DT(object):
             "weekend": now.isoweekday() in range(6, 7),
         }
         
+
     def update(self):
+
         now = datetime.datetime.now()
+
         self.dict = {
             "now": (now, self.dict["now"][0]),
             "year": (now.year, self.dict["year"][0]), 
@@ -67,9 +76,13 @@ class DT(object):
             "weekend": now.isoweekday() in range(6, 7),            
         }
     
+
     def get_value(self, unit):
+
         return self.dict["%s" % unit][0]
-        
+
+    
     def is_new(self, unit):
+
         is_new = not self.dict["%s" % unit][0] == self.dict["%s" % unit][1]
         return is_new    

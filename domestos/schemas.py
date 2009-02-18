@@ -6,6 +6,8 @@ from domestos.spring import *
 
 class DefaultDBSchema(object):
 
+     """ Default database schema - table configurations and mappings """
+     
      def __init__(self, db, engine, logger, metadata):
 
           self.db = db
@@ -48,6 +50,7 @@ class DefaultDBSchema(object):
           self.logger.info("Creating initial database schema")
           self.metadata.create_all(self.engine) 
      
+          
      def load_test_data(self):
           
           self.logger.info("Loading test data")
@@ -65,6 +68,8 @@ class DefaultDBSchema(object):
 # Models
 
 class Device(object):
+
+     """ Device (such as X10) """
      
      def __init__(self, address, description):
 
@@ -77,6 +82,8 @@ class Device(object):
 
 
 class Zone(object):
+     
+     """ Zone (such as Kitchen, Lounge, etc.) """
 
      def __init__(self, name, description):
 

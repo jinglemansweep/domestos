@@ -9,6 +9,7 @@ from domestos.schemas import *
 
 class BasicService(object):
   
+    """ Basic Service """
     
     def __init__(self, cfg, db, debug, logger, reactor):
 
@@ -31,30 +32,44 @@ class BasicService(object):
         day = task.LoopingCall(self.every_day).start(1.0 * 60 * 60 * 24)        
         week = task.LoopingCall(self.every_week).start(1.0 * 60 * 60 * 24 * 7) 
         
-        
-
-        
         self.reactor.run()
-        
 
-    def get_events(self):
-        
-        return [{"id": 1, "type": "x10"},]
-        
 
     def update_poll(self):
         
         self.logger.debug("Update Poll")        
-        poll_events = task.deferLater(self.reactor, 0, self.get_events)
-        poll_events.addCallback(self.process_events)
+        
+        get_events_task = task.deferLater(self.reactor, 0, self.get_events)
+        get_events_task.addCallback(self.process_get_events)
+
+        get_statuses_task = task.deferLater(self.reactor, 0, self.get_statuses)
+        get_statuses_task.addCallback(self.process_get_statuses)
+        
+
+    # Reactor Functions
+
+
+    def get_events(self):
+        
+        return [{"id": 1, "type": "x10"},]    
 
     
+    def get_statuses(self):
+        
+        return [{"id": 1, "type": "x10"},]      
+    
+        
     # Reactor Callbacks
         
 
-    def process_events(self, payload):
+    def process_get_events(self, payload):
         
         self.logger.debug("Process Events: %s" % (payload))
+
+        
+    def process_get_statuses(self, payload):
+        
+        self.logger.debug("Process Statuses: %s" % (payload))        
         
 
     def every_second(self):

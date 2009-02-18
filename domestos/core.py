@@ -7,7 +7,10 @@ from springpython.context import ApplicationContext
 from domestos.spring import *
 from domestos.utils import logsetup
 
+
 def bootstrap():
+    
+    """ Initial bootstrap process called from command line launcher script """
 
     parser = OptionParser()
     #parser.add_option("-f", "--file", dest="filename", help="write report to FILE", metavar="FILE")
@@ -28,15 +31,23 @@ def bootstrap():
     
     service.run()
     
+
 def initialise(cfg, logger, db_schema, options):
+
+    """ Initial configuration and setup processes """
+    
     # Configuration Folder
+    
     app_name = cfg["app_name"] or "domestos"
     home_folder = os.path.expanduser("~")
     cfg_folder = os.path.join(home_folder, ".%s" % (app_name))
+    
     try:
         os.mkdir(cfg_folder)
     except OSError:
         logger.warn("Configuration folder '%s' already exists" % (cfg_folder))  
+    
     # Database Schema
+    
     db_schema.create_schema()
     db_schema.load_test_data()

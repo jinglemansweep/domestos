@@ -2,6 +2,8 @@
 
 class BasePlugin(object):
 
+    """ Base Plugin """
+    
     def __init__(self, db, logger, payload=None):
 
         self.db = db        
@@ -9,6 +11,7 @@ class BasePlugin(object):
         self.payload = payload or []
         self.errors = []
 
+        
     def is_valid(self):
         
         errors = []
@@ -23,9 +26,8 @@ class BasePlugin(object):
 
 
 class DummyPlugin(BasePlugin):
-    """
-    Dummy Plugin
-    """
+
+    """ Dummy Plugin """
     
     NAME = "dummy"
     DESCRIPTION = "Dummy Plugin"
