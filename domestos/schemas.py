@@ -5,10 +5,11 @@ from domestos.spring import *
 
 class DefaultDBSchema(object):
 
-     def __init__(self, metadata, engine, logger):
+     def __init__(self, metadata, engine, db_session, logger):
 
           self.metadata = metadata
           self.engine = engine
+          self.db = db_session
           self.logger = logger
 
           self.device_table = Table("device", self.metadata,
@@ -17,20 +18,20 @@ class DefaultDBSchema(object):
                Column("description", String),
           )
 
-          self.group_table = Table("group", self.metadata,
+          self.zone_table = Table("zone", self.metadata,
                Column("id", Integer, primary_key=True),
                Column("name", String),
                Column("description", String),
           )
 
-          self.device_group_table = Table("device_group", self.metadata,
+          self.device_zone_table = Table("device_zone", self.metadata,
                Column("device_id", Integer, ForeignKey("device.id"), primary_key=True),
-               Column("group_id", Integer, ForeignKey("group.id"), primary_key=True),
+               Column("zone_id", Integer, ForeignKey("zone.id"), primary_key=True),
           )
 
           mapper(Device, self.device_table)
-          mapper(Group, self.group_table, properties = {
-               "devices": relation(Device, secondary=self.device_group_table, backref="groups"),
+          mapper(Zone, self.zone_table, properties = {
+               "devices": relation(Device, secondary=self.device_zone_table, backref="zones"),
           })
          
 
@@ -38,6 +39,19 @@ class DefaultDBSchema(object):
           self.logger.info("Creating initial database schema")
           self.metadata.create_all(self.engine) 
      
+     def load_test_data(self):
+          self.logger.info("Loading test data")
+          lounge_lamp_left = Device("A1", "Lounge Lamp Left")
+          lounge_lamp_right = Device("A2", "Lounge Lamp Right")
+          kitchen_light = Device("A3", "Kitchen Light")
+          zone_lounge = Zone("lounge", "The Lounge")
+          zone_lounge.devices = [lounge_lamp_left, lounge_lamp_right,]
+          zone_kitchen = Zone("kitchen", "The Kitchen")
+          zone_kitchen.devices = [kitchen_light, ]
+          self.db.add_all([zone_lounge, zone_kitchen,])
+          self.db.commit()
+          
+          
 # Models
 
 class Device(object):
@@ -48,13 +62,13 @@ class Device(object):
      def __repr__(self):
           return "<Device('%s','%s')>" % (self.address, self.description)
 
-class Group(object):
+class Zone(object):
      def __init__(self, name, description):
           self.name = name;
           self.description = description
      
      def __repr__(self):
-          return "<Group('%s','%s')>" % (self.name, self.description)
+          return "<Zone('%s','%s')>" % (self.name, self.description)
                
 
 
