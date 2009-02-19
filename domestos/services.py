@@ -35,9 +35,9 @@ class BasicService(object):
         day = task.LoopingCall(self.every_day).start(1.0 * 60 * 60 * 24)        
         week = task.LoopingCall(self.every_week).start(1.0 * 60 * 60 * 24 * 7) 
 
-        echo_factory = self.factory()
-        echo_factory.protocol = self.protocols[0]
-        self.reactor.listenTCP(8007, echo_factory)        
+        tcp_echo_factory = self.factory()
+        tcp_echo_factory.protocol = self.protocols[0]
+        self.reactor.listenTCP(int(self.cfg["echo_port"]), tcp_echo_factory)        
         self.reactor.run()
 
 
@@ -57,12 +57,12 @@ class BasicService(object):
 
     def get_events(self):
         
-        return [{"id": 1, "type": "x10"},]    
+        return [{},]    
 
     
     def get_statuses(self):
         
-        return [{"id": 1, "type": "x10"},]      
+        return [{},]      
     
         
     # Reactor Callbacks

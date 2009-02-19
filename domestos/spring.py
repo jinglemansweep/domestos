@@ -4,13 +4,15 @@ import sys
 from springpython.config import PythonConfig
 from springpython.config import Object
 from springpython.context import scope
-from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData, ForeignKey
+from sqlalchemy import create_engine, Table, Column, DateTime, Integer, String, PickleType, MetaData, ForeignKey, UniqueConstraint
+from sqlalchemy.exceptions import IntegrityError
 from sqlalchemy.orm import sessionmaker, mapper, relation
 from sqlalchemy.databases import mysql 
 from twisted.internet import reactor
 from twisted.internet import task
 from twisted.internet.protocol import Protocol, Factory
 
+from domestos.dao import *
 from domestos.helpers import *
 from domestos.plugins import *
 from domestos.protocols import *
@@ -33,6 +35,7 @@ class CoreApplicationContext(PythonConfig):
             "db_type": "sqlite",
             "db_username": None,
             "db_password": None,
+            "echo_port": 8007,
         }
         return cfg
         
@@ -51,8 +54,8 @@ class CoreApplicationContext(PythonConfig):
         return Factory    
     
     @Object(scope.SINGLETON)
-    def EchoProtocol(self):
-        return Echo(logger=self.Logger())
+    def TcpEchoProtocol(self):
+        return TcpEcho(dao=self.DAO(), logger=self.Logger())
     
     @Object(scope.SINGLETON)
     def DBMetaData(self):
@@ -73,6 +76,10 @@ class CoreApplicationContext(PythonConfig):
         return session_maker()
 
     @Object(scope.SINGLETON)
+    def DAO(self):
+        return DefaultDAO(db=self.DBSession(), logger=self.Logger())
+    
+    @Object(scope.SINGLETON)
     def DBSchema(self):
         return DefaultDBSchema(db=self.DBSession(), 
                                engine=self.DBEngine(), 
@@ -83,7 +90,7 @@ class CoreApplicationContext(PythonConfig):
     
     @Object(scope.SINGLETON)
     def CoreService(self):
-        protocols = [self.EchoProtocol,]
+        protocols = [self.TcpEchoProtocol,]
         return BasicService(cfg=self.DefaultConfiguration(), 
                             debug=self.debug, 
                             db=self.DBSession(), 
