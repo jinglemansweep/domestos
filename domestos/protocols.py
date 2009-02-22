@@ -41,6 +41,7 @@ class TcpEcho(Protocol):
         device = self.dao.find_device(plugin_name="x10", address=device_code)
         if device:
             self.dao.create_trigger(device.id, {"command": command})
+            self.dao.update_state(device.id, {"state": "on"})
             
         self.logger.debug(output_string)        
         self.transport.write(output_string)

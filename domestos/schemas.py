@@ -34,6 +34,14 @@ class DefaultDBSchema(object):
                Column("device_id", Integer, ForeignKey("device.id"), primary_key=True),
                Column("zone_id", Integer, ForeignKey("zone.id"), primary_key=True),
           )
+
+          self.state_table = Table("state", self.metadata,
+               Column("id", Integer, primary_key=True),
+               Column("device", Integer, ForeignKey("device.id")),
+               Column("status", PickleType),
+               Column("create_date", DateTime),                                   
+               Column("modify_date", DateTime),   
+          )          
           
           self.trigger_table = Table("trigger", self.metadata,
                Column("id", Integer, primary_key=True),
@@ -50,6 +58,8 @@ class DefaultDBSchema(object):
                "devices": relation(Device, secondary=self.device_zone_table, backref="zones"),
           })
 
+          mapper(State, self.state_table)           
+          
           mapper(Trigger, self.trigger_table)          
 
      def create_schema(self):
@@ -108,7 +118,23 @@ class Zone(object):
           return "<Zone('%s','%s')>" % (self.name, self.description)
                
 
+     
+class State(object):
+     
+     """ State (current status of devices) """
 
+     def __init__(self, device, status, create_date, modify_date):
+
+          self.device = device
+          self.status = status
+          self.create_date = create_date
+          self.modify_date = modify_date
+     
+     def __repr__(self):
+          
+          return "<State('%s','%s')>" % (self.device, self.status)  
+     
+     
 class Trigger(object):
      
      """ Trigger (some kind of input/signal or inbound event) """

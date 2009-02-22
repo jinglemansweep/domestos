@@ -35,3 +35,16 @@ class DefaultDAO(object):
         trigger = Trigger(device, payload, None, datetime.datetime.utcnow(), None)
         self.db.add(trigger)
         self.db.commit()
+                
+        
+    def update_state(self, device, status):
+        
+        state = self.db.query(State).filter(State.device == device).first()
+        if not state:
+            state = State(device, status, datetime.datetime.utcnow(), datetime.datetime.utcnow())
+            self.db.add(state)
+        else:
+            state.status = status
+            state.modify_date = datetime.datetime.utcnow()
+        self.db.commit()
+        

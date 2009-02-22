@@ -78,6 +78,9 @@ class BasicService(object):
         self.logger.debug("Process Statuses: %s" % (payload))        
         
 
+    # Reactor Helper Callbacks
+    
+        
     def every_second(self):
         
         #self.logger.debug("New Second")       
