@@ -17,17 +17,17 @@ class DefaultDBSchema(object):
 
           self.device_table = Table("device", self.metadata,
                Column("id", Integer, primary_key=True),
-               Column("plugin_name", String),
-               Column("unit_name", String),
-               Column("address", String),
-               Column("description", String),
-               UniqueConstraint("plugin_name", "unit_name", "address", name="plugin_unit_address")
+               Column("plugin_name", String(length=50)),
+               Column("unit_name", String(length=50)),
+               Column("address", String(length=255)),
+               Column("description", String(length=255)),
+               # UniqueConstraint("plugin_name", "unit_name", "address", name="plugin_unit_address")
           )
 
           self.zone_table = Table("zone", self.metadata,
                Column("id", Integer, primary_key=True),
-               Column("name", String),
-               Column("description", String),
+               Column("name", String(length=50)),
+               Column("description", String(length=255)),
           )
 
           self.device_zone_table = Table("device_zone", self.metadata,

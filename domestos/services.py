@@ -1,6 +1,8 @@
 import glob
 import os
+import sched
 import sys
+import threading
 import time
 
 from domestos.helpers import *
@@ -11,99 +13,63 @@ class BasicService(object):
   
     """ Basic Service """
     
-    def __init__(self, cfg, db, debug, factory, logger, protocols, reactor):
+    def __init__(self, cfg, dao, debug, factory, logger, plugins, protocols, reactor, scheduler):
 
         self.cfg = cfg
-        self.db = db
+        self.dao = dao
         self.debug = debug
         self.factory = factory
         self.logger = logger
+        self.plugins = plugins
         self.protocols = protocols
         self.reactor = reactor
+        self.scheduler = scheduler
 
+        self.plugin_pool = {}
+        self.protocol_pool = {}        
+        
         self.logger.info("Service initialised")
         self.logger.debug("Protocols: %s" % (self.protocols))
+        self.logger.debug("Plugins: %s" % (self.plugins))
         
-        
-    def run(self):                              
-        
-        devs = self.db.query(Device).all()
-        update_poll = task.LoopingCall(self.update_poll).start(5.0)
-        second = task.LoopingCall(self.every_second).start(1.0)
-        minute = task.LoopingCall(self.every_minute).start(1.0 * 60)
-        hour = task.LoopingCall(self.every_hour).start(1.0 * 60 * 60)
-        day = task.LoopingCall(self.every_day).start(1.0 * 60 * 60 * 24)        
-        week = task.LoopingCall(self.every_week).start(1.0 * 60 * 60 * 24 * 7) 
 
-        tcp_echo_factory = self.factory()
-        tcp_echo_factory.protocol = self.protocols[0]
-        self.reactor.listenTCP(int(self.cfg["echo_port"]), tcp_echo_factory)        
+    def run(self):                              
+                
+        self.register_protocols()
+        t = threading.Thread(target=self.run_scheduler).start()            
         self.reactor.run()
 
 
-    def update_poll(self):
+    def register_protocols(self):
         
-        self.logger.debug("Update Poll")        
+        for p in self.protocols:
+            protocol = self.protocols[p]
+            self.protocol_pool[p] = self.factory()
+            self.protocol_pool[p].protocol = protocol
+            self.reactor.listenTCP(int(protocol().PORT), self.protocol_pool[p])
         
-        get_events_task = task.deferLater(self.reactor, 0, self.get_events)
-        get_events_task.addCallback(self.process_get_events)
+        
+        
+    # Scheduler Functions
 
-        get_statuses_task = task.deferLater(self.reactor, 0, self.get_statuses)
-        get_statuses_task.addCallback(self.process_get_statuses)
-        
 
-    # Reactor Functions
+    def event_poller(self):
+        
+        self.logger.debug("Adding events")
 
-
-    def get_events(self):
+        states = self.dao.all_states()
+        self.logger.debug("States: %s" % (states))
         
-        return [{},]    
-
-    
-    def get_statuses(self):
-        
-        return [{},]      
-    
-        
-    # Reactor Callbacks
-        
-
-    def process_get_events(self, payload):
-        
-        self.logger.debug("Process Events: %s" % (payload))
-
-        
-    def process_get_statuses(self, payload):
-        
-        self.logger.debug("Process Statuses: %s" % (payload))        
-        
-
-    # Reactor Helper Callbacks
-    
-        
-    def every_second(self):
-        
-        #self.logger.debug("New Second")       
+        self.scheduler.enter(1, 1, self.event_poller, ())
         pass
-
-    def every_minute(self):
-
-        self.logger.debug("New Minute")  
+    
+    
+    def run_scheduler(self):
         
-
-    def every_hour(self):
-
-        self.logger.debug("New Hour")  
+        self.logger.debug("Starting scheduler")
+        self.scheduler.enter(1, 1, self.event_poller, ())
+        self.scheduler.run()
         
-
-    def every_day(self):
-
-        self.logger.debug("New Day")
-        
-
-    def every_week(self):
-
-        self.logger.debug("New Week")          
 
 
     

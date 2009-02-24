@@ -1,6 +1,8 @@
 import os
 import sys
 
+import sched
+
 from springpython.config import PythonConfig
 from springpython.config import Object
 from springpython.context import scope
@@ -32,9 +34,11 @@ class CoreApplicationContext(PythonConfig):
     def DefaultConfiguration(self):
         cfg = {
             "app_name": "domestos",
-            "db_type": "sqlite",
-            "db_username": None,
-            "db_password": None,
+            "db_type": "mysql",
+            "db_host": "127.0.0.1",
+            "db_name": "domestos",
+            "db_username": "domestos",
+            "db_password": "Dom3570$!",
             "echo_port": 8007,
         }
         return cfg
@@ -54,8 +58,8 @@ class CoreApplicationContext(PythonConfig):
         return Factory    
     
     @Object(scope.SINGLETON)
-    def TcpEchoProtocol(self):
-        return TcpEcho(dao=self.DAO(), logger=self.Logger())
+    def TelnetProtocol(self):
+        return TelnetProtocol(dao=self.DAO(), logger=self.Logger())
     
     @Object(scope.SINGLETON)
     def DBMetaData(self):
@@ -65,7 +69,7 @@ class CoreApplicationContext(PythonConfig):
     def DBEngine(self):
         cfg = self.DefaultConfiguration()
         db_filename = os.path.join(os.path.expanduser("~"), ".%s" % (cfg["app_name"]), "%s.db" % (cfg["app_name"]))
-        db_conn_str = "%s:///%s" % (cfg["db_type"], db_filename)
+        db_conn_str = "%s://%s:%s@%s/%s?charset=utf8&use_unicode=0" % (cfg["db_type"], cfg["db_username"], cfg["db_password"], cfg["db_host"], cfg["db_name"])
         engine = create_engine(db_conn_str, echo=self.debug)
         return engine
         
@@ -86,18 +90,28 @@ class CoreApplicationContext(PythonConfig):
                                logger=self.Logger(), 
                                metadata=self.DBMetaData())
     
+    @Object(scope.PROTOTYPE)
+    def DefaultScheduler(self):
+        current_time_function = time.time
+        delay_by_one_unit_function = time.sleep
+        scheduler = sched.scheduler(current_time_function, delay_by_one_unit_function)        
+        return scheduler
+    
     # Services
     
     @Object(scope.SINGLETON)
     def CoreService(self):
-        protocols = [self.TcpEchoProtocol,]
+        protocols = {"tcp_echo": self.TelnetProtocol}
+        plugins = {"dummy": self.DummyPlugin()}
         return BasicService(cfg=self.DefaultConfiguration(), 
                             debug=self.debug, 
-                            db=self.DBSession(), 
+                            dao=self.DAO(), 
                             factory=self.TwistedFactory(),
                             logger=self.Logger(),
+                            plugins = plugins,
                             protocols=protocols,
-                            reactor=self.TwistedReactor())
+                            reactor=self.TwistedReactor(),
+                            scheduler=self.DefaultScheduler())
     
     # Plugins
     

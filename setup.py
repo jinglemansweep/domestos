@@ -14,9 +14,9 @@ setup(
 	author_email="jinglemansweep@gmail.com",
 	url="http://www.louisking.co.uk",
 	packages = find_packages(),
-    scripts = [os.path.join("bin", "domestos_engine.py"),],
+        scripts = [os.path.join("bin", "domestos_engine.py"),],
 	test_suite = "nose.collector",
-    install_requires = ["Pyro", "amara", "springpython", "twisted", "sqlalchemy >= 0.5", "Elixir >= 0.6", "zope.interface"],
+        install_requires = ["Pyro", "amara", "springpython", "twisted", "MySQL-python <= 1.2.2", "sqlalchemy >= 0.5", "Elixir >= 0.6", "zope.interface"],
 	long_description="""DomestOS Home Automation Platform""",
 	classifiers=[
 		"Development Status :: 2 - Pre-Alpha",

@@ -21,7 +21,7 @@ class BasePlugin(object):
         self.errors = errors
         success = (len(errors) == 0)
         if not success:
-            logger.warning("Missing plugin payload parameters: %s" % (",".join(errors)))
+            self.logger.warning("Missing plugin payload parameters: %s" % (",".join(errors)))
         return success
 
 
@@ -32,12 +32,14 @@ class DummyPlugin(BasePlugin):
     NAME = "dummy"
     DESCRIPTION = "Dummy Plugin"
     CAPABILITIES = ["console",]
-    PARAMETERS = ["name", "age", "message",]
+    PARAMETERS = []
+    POLL_INTERVAL = 5
 
-    #def __repr__(self):
-    #    return self.NAME
 
     def execute(self):
         if self.is_valid():
-            logger.debug("Executing '%s': %s" % (self.NAME, self.payload))
-            logger.info("DummyPlugin")
+            self.logger.debug("Executing '%s': %s" % (self.NAME, self.payload))
+            self.logger.info("DummyPlugin")
+            return {"status": "ok"}
+        else:
+            return {"status": "error"}

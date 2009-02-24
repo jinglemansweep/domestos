@@ -37,6 +37,12 @@ class DefaultDAO(object):
         self.db.commit()
                 
         
+    def all_states(self):
+        
+        states = self.db.query(State).all()
+        return states
+    
+        
     def update_state(self, device, status):
         
         state = self.db.query(State).filter(State.device == device).first()

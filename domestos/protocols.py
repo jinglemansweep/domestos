@@ -6,9 +6,13 @@ from twisted.internet.protocol import Protocol, Factory
 from domestos.schemas import *
 
 
-class TcpEcho(Protocol):
+class TelnetProtocol(Protocol):
 
-    """ TCP Echo Protocol """
+    """ Telnet Protocol """
+    
+
+    PORT = 8007
+    
     
     def __init__(self, dao, logger):
         
