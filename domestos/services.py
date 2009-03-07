@@ -1,8 +1,6 @@
 import glob
 import os
-import sched
 import sys
-import threading
 import time
 
 from domestos.helpers import *
@@ -13,63 +11,74 @@ class BasicService(object):
   
     """ Basic Service """
     
-    def __init__(self, cfg, dao, debug, factory, logger, plugins, protocols, reactor, scheduler):
+    def __init__(self, cfg, dao, debug, logger, msg_client, plugins):
 
         self.cfg = cfg
         self.dao = dao
         self.debug = debug
-        self.factory = factory
         self.logger = logger
+        self.msg_client = msg_client
         self.plugins = plugins
-        self.protocols = protocols
-        self.reactor = reactor
-        self.scheduler = scheduler
 
-        self.plugin_pool = {}
-        self.protocol_pool = {}        
-        
+        self.context = {}
+        self.plugin_pool = {}     
+
         self.logger.info("Service initialised")
-        self.logger.debug("Protocols: %s" % (self.protocols))
         self.logger.debug("Plugins: %s" % (self.plugins))
         
 
     def run(self):                              
                 
-        self.register_protocols()
-        t = threading.Thread(target=self.run_scheduler).start()            
-        self.reactor.run()
+        self.receive_messages()
+
+        
+    # Message Receiver Functions
 
 
-    def register_protocols(self):
+    def receive_messages(self):
         
-        for p in self.protocols:
-            protocol = self.protocols[p]
-            self.protocol_pool[p] = self.factory()
-            self.protocol_pool[p].protocol = protocol
-            self.reactor.listenTCP(int(protocol().PORT), self.protocol_pool[p])
-        
-        
-        
-    # Scheduler Functions
+        self.logger.debug("Waiting for messages...")
+    
+        while True:
 
+            msg = self.msg_client.get("domestos.input")
+            
+            if msg:
+                
+                self.logger.debug("Msg: %s" % (msg))
 
-    def event_poller(self):
-        
-        self.logger.debug("Adding events")
+                plugin_inst = self.plugins[msg["plugin"]]
 
-        states = self.dao.all_states()
-        self.logger.debug("States: %s" % (states))
-        
-        self.scheduler.enter(1, 1, self.event_poller, ())
-        pass
+                if plugin_inst:
+                    plugin_inst.process_input(msg["payload"])
+                                
+                self.update_contexts()
+
     
     
-    def run_scheduler(self):
-        
-        self.logger.debug("Starting scheduler")
-        self.scheduler.enter(1, 1, self.event_poller, ())
-        self.scheduler.run()
-        
+
+    # Context Functions
+
+    def update_contexts(self):
+
+        self.update_calendar_context()
 
 
-    
+    def update_calendar_context(self):
+        
+        now = datetime.datetime.now()
+        
+        self.context["calendar"] = {
+             "now": now,
+             "year": now.year, 
+             "month": now.month, 
+             "day": now.day, 
+             "hour": now.hour, 
+             "minute": now.minute, 
+             "second": now.second,
+             "dayofweek": now.isoweekday(),
+             "weekday": now.isoweekday() in range(1, 5),
+             "weekend": now.isoweekday() in range(6, 7),
+         }
+
+        

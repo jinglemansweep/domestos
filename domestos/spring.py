@@ -1,8 +1,8 @@
 import os
 import sys
-
 import sched
 
+from memcache import Client
 from springpython.config import PythonConfig
 from springpython.config import Object
 from springpython.context import scope
@@ -10,14 +10,10 @@ from sqlalchemy import create_engine, Table, Column, DateTime, Integer, String, 
 from sqlalchemy.exceptions import IntegrityError
 from sqlalchemy.orm import sessionmaker, mapper, relation
 from sqlalchemy.databases import mysql 
-from twisted.internet import reactor
-from twisted.internet import task
-from twisted.internet.protocol import Protocol, Factory
 
 from domestos.dao import *
 from domestos.helpers import *
 from domestos.plugins import *
-from domestos.protocols import *
 from domestos.schemas import *
 from domestos.services import *
 from domestos.utils import logsetup
@@ -39,7 +35,7 @@ class CoreApplicationContext(PythonConfig):
             "db_name": "domestos",
             "db_username": "domestos",
             "db_password": "Dom3570$!",
-            "echo_port": 8007,
+            "msg_servers": ["10.0.2.10:21122",],
         }
         return cfg
         
@@ -50,16 +46,9 @@ class CoreApplicationContext(PythonConfig):
         return logsetup()
 
     @Object(scope.SINGLETON)
-    def TwistedReactor(self):
-        return reactor
-
-    @Object(scope.SINGLETON)
-    def TwistedFactory(self):
-        return Factory    
-    
-    @Object(scope.SINGLETON)
-    def TelnetProtocol(self):
-        return TelnetProtocol(dao=self.DAO(), logger=self.Logger())
+    def MsgClient(self):
+        cfg = self.DefaultConfiguration()
+        return Client(cfg["msg_servers"])
     
     @Object(scope.SINGLETON)
     def DBMetaData(self):
@@ -89,34 +78,28 @@ class CoreApplicationContext(PythonConfig):
                                engine=self.DBEngine(), 
                                logger=self.Logger(), 
                                metadata=self.DBMetaData())
-    
-    @Object(scope.PROTOTYPE)
-    def DefaultScheduler(self):
-        current_time_function = time.time
-        delay_by_one_unit_function = time.sleep
-        scheduler = sched.scheduler(current_time_function, delay_by_one_unit_function)        
-        return scheduler
-    
+        
     # Services
     
     @Object(scope.SINGLETON)
     def CoreService(self):
-        protocols = {"tcp_echo": self.TelnetProtocol}
-        plugins = {"dummy": self.DummyPlugin()}
+
+        plugins = {"x10": self.X10Heyu2Plugin()}
         return BasicService(cfg=self.DefaultConfiguration(), 
                             debug=self.debug, 
                             dao=self.DAO(), 
-                            factory=self.TwistedFactory(),
                             logger=self.Logger(),
-                            plugins = plugins,
-                            protocols=protocols,
-                            reactor=self.TwistedReactor(),
-                            scheduler=self.DefaultScheduler())
+                            msg_client=self.MsgClient(),
+                            plugins = plugins,)
     
     # Plugins
     
     @Object(scope.PROTOTYPE)
     def DummyPlugin(self):
-        return DummyPlugin(db=self.DBSession(), 
+        return DummyPlugin(dao=self.DAO(), 
                            logger=self.Logger())       
 
+    @Object(scope.PROTOTYPE)
+    def X10Heyu2Plugin(self):
+        return X10Heyu2Plugin(dao=self.DAO(), 
+                           logger=self.Logger())  

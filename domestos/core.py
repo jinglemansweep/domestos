@@ -50,4 +50,4 @@ def initialise(cfg, logger, db_schema, options):
     # Database Schema
     
     db_schema.create_schema()
-    db_schema.load_test_data()
+    #db_schema.load_test_data()
