@@ -13,6 +13,7 @@ from sqlalchemy.databases import mysql
 
 from domestos.dao import *
 from domestos.helpers import *
+from domestos.lib.scheduler import *
 from domestos.plugins import *
 from domestos.schemas import *
 from domestos.services import *
@@ -78,7 +79,11 @@ class CoreApplicationContext(PythonConfig):
                                engine=self.DBEngine(), 
                                logger=self.Logger(), 
                                metadata=self.DBMetaData())
-        
+
+    @Object(scope.SINGLETON)
+    def Scheduler(self):
+        return Scheduler()    
+    
     # Services
     
     @Object(scope.SINGLETON)
@@ -90,7 +95,8 @@ class CoreApplicationContext(PythonConfig):
                             dao=self.DAO(), 
                             logger=self.Logger(),
                             msg_client=self.MsgClient(),
-                            plugins = plugins,)
+                            plugins=plugins,
+                            scheduler=self.Scheduler(),)
     
     # Plugins
     

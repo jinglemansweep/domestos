@@ -11,7 +11,7 @@ class BasicService(object):
   
     """ Basic Service """
     
-    def __init__(self, cfg, dao, debug, logger, msg_client, plugins):
+    def __init__(self, cfg, dao, debug, logger, msg_client, plugins, scheduler):
 
         self.cfg = cfg
         self.dao = dao
@@ -19,6 +19,7 @@ class BasicService(object):
         self.logger = logger
         self.msg_client = msg_client
         self.plugins = plugins
+        self.scheduler = scheduler
 
         self.context = {}
         self.plugin_pool = {}     
@@ -29,6 +30,7 @@ class BasicService(object):
 
     def run(self):                              
                 
+        self.scheduler.start()
         self.receive_messages()
 
         
