@@ -11,13 +11,13 @@ class BasicService(object):
   
     """ Basic Service """
     
-    def __init__(self, cfg, dao, debug, logger, msg_client, plugins, scheduler):
+    def __init__(self, cfg, dao, debug, logger, memcache_client, plugins, scheduler):
 
         self.cfg = cfg
         self.dao = dao
         self.debug = debug
         self.logger = logger
-        self.msg_client = msg_client
+        self.memcache_client = memcache_client
         self.plugins = plugins
         self.scheduler = scheduler
 
@@ -30,57 +30,23 @@ class BasicService(object):
 
     def run(self):                              
                 
+        for plugin_inst in self.plugins:
+            plugin_inst.initialise()
+        
         self.scheduler.start()
-        self.receive_messages()
+        self.start_event_loop()
 
         
     # Message Receiver Functions
 
 
-    def receive_messages(self):
+    def start_event_loop(self):
         
-        self.logger.debug("Waiting for messages...")
-    
-        while True:
-
-            msg = self.msg_client.get("domestos.input")
-            
-            if msg:
-                
-                self.logger.debug("Msg: %s" % (msg))
-
-                plugin_inst = self.plugins[msg["plugin"]]
-
-                if plugin_inst:
-                    plugin_inst.process_input(msg["payload"])
-                                
-                self.update_contexts()
-
+        while True:    
+            for plugin_inst in self.plugins:
+                plugin_inst.update_values()
+                   
     
     
-
-    # Context Functions
-
-    def update_contexts(self):
-
-        self.update_calendar_context()
-
-
-    def update_calendar_context(self):
-        
-        now = datetime.datetime.now()
-        
-        self.context["calendar"] = {
-             "now": now,
-             "year": now.year, 
-             "month": now.month, 
-             "day": now.day, 
-             "hour": now.hour, 
-             "minute": now.minute, 
-             "second": now.second,
-             "dayofweek": now.isoweekday(),
-             "weekday": now.isoweekday() in range(1, 5),
-             "weekend": now.isoweekday() in range(6, 7),
-         }
 
         

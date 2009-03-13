@@ -16,7 +16,7 @@ setup(
 	packages = find_packages(),
         scripts = [os.path.join("bin", "domestos_engine.py"),],
 	test_suite = "nose.collector",
-        install_requires = ["Pyro", "amara", "springpython", "MySQL-python <= 1.2.2", "sqlalchemy >= 0.5", "Elixir >= 0.6", "python-memcached"],
+        install_requires = ["Pyro", "amara", "springpython", "MySQL-python <= 1.2.2", "sqlalchemy >= 0.5", "Elixir >= 0.6", "python-memcached", "ConfigObj",],
 	long_description="""DomestOS Home Automation Platform""",
 	classifiers=[
 		"Development Status :: 2 - Pre-Alpha",

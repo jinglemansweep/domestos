@@ -8,7 +8,7 @@ from domestos.spring import *
 from domestos.utils import logsetup
 
 
-def bootstrap():
+def server_bootstrap():
     
     """ Initial bootstrap process called from command line launcher script """
 

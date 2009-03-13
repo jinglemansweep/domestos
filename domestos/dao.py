@@ -6,26 +6,33 @@ from domestos.schemas import *
 class DefaultDAO(object):
     
 
-    def __init__(self, db, logger):
+    def __init__(self, db, logger, memcache_client):
 
         self.db = db
         self.logger = logger
+        self.memcache_client = memcache_client
                  
         
-    def all_states(self):
+    def kv_set(self, key, value):
         
-        states = self.db.query(State).all()
-        return states
+        key = str(key)
+        self.memcache_client.set(key, value)
+
+
+    def kv_set_multi(self, dictionary=None):
+        
+        if not dictionary: dictionary = dict()
+        self.memcache_client.set_multi(dictionary)        
+        
+            
+    def kv_get(self, key):
+        
+        value = self.memcache_client.get(str(key))
+        return value
+
+    def kv_get_multi(self, keys=None):
+        
+        if not keys: keys = list()
+        values = self.memcache_client.get_multi(keys)
+        return values  
     
-        
-    def update_state(self, namespace, address, status):
-        
-        state = self.db.query(State).filter(State.namespace == namespace and State.address == address).first()
-        if not state:
-            state = State(namespace, address, status, datetime.datetime.utcnow(), datetime.datetime.utcnow())
-            self.db.add(state)
-        else:
-            state.status = status
-            state.modify_date = datetime.datetime.utcnow()
-        self.db.commit()
-        

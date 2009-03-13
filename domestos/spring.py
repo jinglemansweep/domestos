@@ -19,6 +19,7 @@ from domestos.schemas import *
 from domestos.services import *
 from domestos.utils import logsetup
 
+
 class CoreApplicationContext(PythonConfig):
 
     def __init__(self, debug):
@@ -36,7 +37,7 @@ class CoreApplicationContext(PythonConfig):
             "db_name": "domestos",
             "db_username": "domestos",
             "db_password": "Dom3570$!",
-            "msg_servers": ["10.0.2.10:21122",],
+            "memcache_hosts": ["10.0.2.10:11211",],
         }
         return cfg
         
@@ -45,11 +46,6 @@ class CoreApplicationContext(PythonConfig):
     @Object(scope.SINGLETON)
     def Logger(self):
         return logsetup()
-
-    @Object(scope.SINGLETON)
-    def MsgClient(self):
-        cfg = self.DefaultConfiguration()
-        return Client(cfg["msg_servers"])
     
     @Object(scope.SINGLETON)
     def DBMetaData(self):
@@ -71,7 +67,7 @@ class CoreApplicationContext(PythonConfig):
 
     @Object(scope.SINGLETON)
     def DAO(self):
-        return DefaultDAO(db=self.DBSession(), logger=self.Logger())
+        return DefaultDAO(db=self.DBSession(), logger=self.Logger(), memcache_client=self.MemcacheClient())
     
     @Object(scope.SINGLETON)
     def DBSchema(self):
@@ -81,6 +77,11 @@ class CoreApplicationContext(PythonConfig):
                                metadata=self.DBMetaData())
 
     @Object(scope.SINGLETON)
+    def MemcacheClient(self):
+        cfg = self.DefaultConfiguration()
+        return Client(cfg["memcache_hosts"], debug=1)    
+    
+    @Object(scope.SINGLETON)
     def Scheduler(self):
         return Scheduler()    
     
@@ -88,23 +89,25 @@ class CoreApplicationContext(PythonConfig):
     
     @Object(scope.SINGLETON)
     def CoreService(self):
-
-        plugins = {"x10": self.X10Heyu2Plugin()}
+        plugins = [
+            self.CalendarPlugin(),
+            self.X10Heyu2Plugin(),
+        ]
         return BasicService(cfg=self.DefaultConfiguration(), 
                             debug=self.debug, 
                             dao=self.DAO(), 
                             logger=self.Logger(),
-                            msg_client=self.MsgClient(),
+                            memcache_client=self.MemcacheClient(),
                             plugins=plugins,
                             scheduler=self.Scheduler(),)
     
     # Plugins
-    
-    @Object(scope.PROTOTYPE)
-    def DummyPlugin(self):
-        return DummyPlugin(dao=self.DAO(), 
-                           logger=self.Logger())       
 
+    @Object(scope.PROTOTYPE)
+    def CalendarPlugin(self):
+        return CalendarPlugin(dao=self.DAO(), 
+                           logger=self.Logger())      
+    
     @Object(scope.PROTOTYPE)
     def X10Heyu2Plugin(self):
         return X10Heyu2Plugin(dao=self.DAO(), 
