@@ -3,26 +3,30 @@ import os
 import sys
 import time
 
-from domestos.helpers import *
 from domestos.plugins import *
 from domestos.schemas import *
 
-class BasicService(object):
+class CoreService(object):
   
-    """ Basic Service """
+    """ Core Service """
     
-    def __init__(self, cfg, dao, debug, logger, memcache_client, plugins, scheduler):
+    def __init__(self, dao, debug, logger, plugins):
 
-        self.cfg = cfg
         self.dao = dao
         self.debug = debug
         self.logger = logger
-        self.memcache_client = memcache_client
         self.plugins = plugins
-        self.scheduler = scheduler
+         
+        app_name = "domestos"
+        home_folder = os.path.expanduser("~")
+        cfg_folder = os.path.join(home_folder, ".%s" % (app_name))
+    
+        try:
+            os.mkdir(cfg_folder)
+        except OSError:
+            logger.warn("Configuration folder '%s' already exists" % (cfg_folder))     
 
-        self.context = {}
-        self.plugin_pool = {}     
+        self.dao.create_schema() 
 
         self.logger.info("Service initialised")
         self.logger.debug("Plugins: %s" % (self.plugins))
@@ -31,9 +35,8 @@ class BasicService(object):
     def run(self):                              
                 
         for plugin_inst in self.plugins:
-            plugin_inst.initialise()
-        
-        self.scheduler.start()
+            plugin_inst._start()
+
         self.start_event_loop()
 
         
@@ -44,7 +47,7 @@ class BasicService(object):
         
         while True:    
             for plugin_inst in self.plugins:
-                plugin_inst.update_values()
+                plugin_inst._execute()
                    
     
     

@@ -5,65 +5,27 @@ class BasePlugin(object):
     
     """ Base Plugin """
 
-    
     def __repr__(self):
-        return str(self.__class__.__name__)
+        return str(self.__class__.__name__)    
+
+class AMQPEcho(BasePlugin):
     
-    
-    def __init__(self, dao, logger):
-        self.dao = dao        
+    """ AMQP Echo Plugin """
+
+    def __init__(self, amqp_connection, logger):
+        self.connection = amqp_connection
+        self.channel = self.connection.channel()
         self.logger = logger
 
+    def _start(self):
+        self.channel.queue_declare(queue="queue_core", durable=True, exclusive=False, auto_delete=False)
+        self.channel.exchange_declare(exchange="exchange_core", type="direct", durable=True, auto_delete=False,)
+        self.channel.queue_bind(queue="queue_core", exchange="exchange_core", routing_key="core")  
         
-    def update_values(self):        
-        pass
-
-
-class CalendarPlugin(BasePlugin):
-    
-    
-    """ Calendar Plugin """
-    
-    
-    def initialise(self):
-        nodes = self.populate_values()
-        self.dao.kv_set_multi(nodes)
-        self.logger.info("%s initialised (%i keys set)" % (self, len(nodes)))
-    
+    def _execute(self):
+        msg = self.channel.basic_get("queue_core")        
+        if msg:
+            self.channel.basic_ack(msg.delivery_tag)
+            self.logger.info("AMQPEcho: %s" % (msg.body))
         
-    def update_values(self):
-        nodes = self.populate_values()
-        self.dao.kv_set_multi(nodes)
 
-        
-    def populate_values(self):
-        now = datetime.now()
-        nodes = {
-            "domestos.cal.year": now.year,
-            "domestos.cal.month": now.month,
-            "domestos.cal.day": now.day,
-            "domestos.cal.hour": now.hour,
-            "domestos.cal.minute": now.minute,
-            "domestos.cal.second": now.second,            
-        }
-        return nodes
-        
-    
-class X10Heyu2Plugin(BasePlugin):
-
-    
-    """ X10 Heyu2 Plugin """
-
-    
-    def initialise(self):        
-        keys = ["domestos.x10.%s.%s" % (h, u) for u in range(1, 16) for h in ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o",]]
-        nodes = dict()
-        for key in keys:
-            nodes[key] = ""
-        self.dao.kv_set_multi(nodes)
-        
-        self.logger.info("%s initialised (%i keys set)" % (self, len(nodes)))
-    
-
-    def update_values(self):
-        pass

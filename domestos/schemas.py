@@ -4,16 +4,16 @@ from domestos.spring import *
 
 # Tables
 
-class DefaultDBSchema(object):
+class CoreDBSchema(object):
 
-     """ Default database schema - table configurations and mappings """
+     """ Core database schema - table configurations and mappings """
      
-     def __init__(self, db, engine, logger, metadata):
+     def __init__(self, engine, logger, metadata, session):
 
-          self.db = db
           self.engine = engine
           self.logger = logger
           self.metadata = metadata
+          self.session = session
 
           self.state_table = Table("state", self.metadata,
                Column("id", Integer, primary_key=True),

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+ 
+    <!-- Common -->
+
+    <object id="logger" class="domestos.utils.LogSetup" scope="singleton">
+        <constructor-arg><value>domestos</value></constructor-arg>
+    </object>
+   
+    <!-- Database -->
+   		
+    <object id="sqlalchemy_engine" class="sqlalchemy.create_engine" scope="singleton">
+        <constructor-arg><value>mysql://domestos:Dom3570$!@localhost/domestos?charset=utf8&amp;use_unicode=0</value></constructor-arg>
+    </object>
+
+    <object id="sqlalchemy_metadata" class="sqlalchemy.MetaData" scope="singleton" />
+
+    <object id="sqlalchemy_schema" class="domestos.schemas.CoreDBSchema" scope="singleton">
+        <constructor-arg name="engine"><ref object="sqlalchemy_engine" /></constructor-arg>  
+        <constructor-arg name="logger"><ref object="logger" /></constructor-arg>
+        <constructor-arg name="metadata"><ref object="sqlalchemy_metadata" /></constructor-arg>     
+        <constructor-arg name="session"><ref object="sqlalchemy_session" /></constructor-arg>
+    </object>
+
+    <object id="sqlalchemy_session" class="sqlalchemy.orm.sessionmaker" scope="singleton">
+        <constructor-arg name="bind"><ref object="sqlalchemy_engine" /></constructor-arg> 
+    </object>
+
+    <object id="sqlalchemy_dao" class="domestos.dao.CoreDAO">
+        <constructor-arg name="schema"><ref object="sqlalchemy_schema" /></constructor-arg>
+        <constructor-arg name="session"><ref object="sqlalchemy_session" /></constructor-arg>
+        <constructor-arg name="logger"><ref object="logger" /></constructor-arg>
+    </object>
+
+    <!-- Utils -->
+
+    <object id="amqp_connection" class="amqplib.client_0_8.Connection" scope="singleton">
+        <constructor-arg name="host"><value>higgs:5672</value></constructor-arg>
+        <constructor-arg name="userid"><value>guest</value></constructor-arg>
+        <constructor-arg name="password"><value>guest</value></constructor-arg>
+        <constructor-arg name="virtual_host"><value>/</value></constructor-arg>
+        <constructor-arg name="insist"><value>False</value></constructor-arg>
+    </object>
+
+    <!-- Plugins -->
+
+    <object id="amqp_plugin" class="domestos.plugins.AMQPEcho" scope="prototype">
+        <constructor-arg name="amqp_connection"><ref object="amqp_connection" /></constructor-arg>
+        <constructor-arg name="logger"><ref object="logger" /></constructor-arg>
+    </object>
+
+    <!-- Services -->
+
+    <object id="service" class="domestos.services.CoreService" scope="singleton">
+        <constructor-arg name="dao"><ref object="sqlalchemy_dao" /></constructor-arg>
+        <constructor-arg name="debug"><value>True</value></constructor-arg>
+        <constructor-arg name="logger"><ref object="logger" /></constructor-arg>   
+        <constructor-arg name="plugins">
+            <list>
+                <ref object="amqp_plugin" />
+            </list>
+        </constructor-arg> 
+    </object>
+
+
+
+</objects>
+
