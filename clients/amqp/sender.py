@@ -3,7 +3,7 @@
 from amqplib import client_0_8 as amqp
 import sys
 
-AMQP_HOST = "higgs:5672"
+AMQP_HOST = "192.168.1.70:5672"
 AMQP_USERID = "guest"
 AMQP_PASSWORD = "guest"
 AMQP_VIRTUAL_HOST = "/"

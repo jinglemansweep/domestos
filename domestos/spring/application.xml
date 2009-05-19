@@ -8,8 +8,11 @@
 
     <object id="logger" class="domestos.utils.LogSetup" scope="singleton">
         <constructor-arg name="name"><value>domestos</value></constructor-arg>
-        <constructor-arg name="format_string"><value><![CDATA[[%(asctime)s] %(module)-10s%(levelname)-8s%(message)s]]></value></constructor-arg>
-        <constructor-arg name="datestamp_string"><value><![CDATA[%Y-%m-%d %H:%M:%S]]></value></constructor-arg>
+        <!--<constructor-arg name="format_string"><value><![CDATA[[%(asctime)s] %(module)-10s%(levelname)-8s%(message)s]]></value></constructor-arg>-->
+        <!--<constructor-arg name="datestamp_string"><value><![CDATA[%Y-%m-%d %H:%M:%S]]></value></constructor-arg> -->
+       <constructor-arg name="format_string"><value><![CDATA[[%(asctime)s] %(levelname)-6s%(message)s]]></value></constructor-arg>
+        <constructor-arg name="datestamp_string"><value><![CDATA[%H:%M:%S]]></value></constructor-arg>
+        <constructor-arg name="level"><value>DEBUG</value></constructor-arg>
     </object>
    
     <!-- Database -->
@@ -40,35 +43,76 @@
     <!-- Utils -->
 
     <object id="amqp_connection" class="amqplib.client_0_8.Connection" scope="singleton">
-        <constructor-arg name="host"><value>higgs:5672</value></constructor-arg>
+        <constructor-arg name="host"><value>192.168.1.70:5672</value></constructor-arg>
         <constructor-arg name="userid"><value>guest</value></constructor-arg>
         <constructor-arg name="password"><value>guest</value></constructor-arg>
         <constructor-arg name="virtual_host"><value>/</value></constructor-arg>
         <constructor-arg name="insist"><value>False</value></constructor-arg>
     </object>
 
-    <!-- Plugins -->
+    <!-- Messaging -->
 
-    <object id="amqp_echo_plugin" class="domestos.plugins.AMQPEcho" scope="prototype">
+    <object id="amqp_client" class="domestos.messaging.AMQPClient" scope="singleton">
         <constructor-arg name="amqp_connection"><ref object="amqp_connection" /></constructor-arg>
         <constructor-arg name="logger"><ref object="logger" /></constructor-arg>
     </object>
 
+    <!-- Schedules -->
+
+    <object id="schedule_test" class="domestos.scheduler.Schedule" scope="prototype">
+        <constructor-arg name="years"></constructor-arg>
+        <constructor-arg name="months"></constructor-arg>
+        <constructor-arg name="days"></constructor-arg>
+        <constructor-arg name="hours"></constructor-arg>
+        <constructor-arg name="minutes"></constructor-arg>
+        <constructor-arg name="seconds"></constructor-arg>
+    </object>
+
+    <!-- Plugins -->
+
+    <object id="amqp_echo_plugin" class="domestos.plugins.AMQPEcho" scope="prototype" />
+    
     <object id="x10_controller_plugin" class="domestos.plugins.X10Controller" scope="prototype">
-        <constructor-arg name="amqp_connection"><ref object="amqp_connection" /></constructor-arg>
-        <constructor-arg name="logger"><ref object="logger" /></constructor-arg>
+        <constructor-arg name="rules">
+            <list>
+                <list>
+                    <ref object="schedule_test" />
+                    <value>a1</value>
+                    <value>on</value>
+                    <list>
+                        <list><value>x10.output</value><value>HELLO</value></list>
+                        <list><value>x10.output</value><value>POO</value></list>
+                        <list><value>xmpp</value><value>Hello There</value></list>
+                    </list>
+                </list>
+            </list>
+        </constructor-arg> 
+    </object>
+
+    <object id="xmpp_controller_plugin" class="domestos.plugins.XMPPController" scope="prototype">
+        <constructor-arg name="xmpp_hostname"><value>talk.google.com</value></constructor-arg>        
+        <constructor-arg name="xmpp_port"><value>5222</value></constructor-arg>        
+        <constructor-arg name="xmpp_username"><value>jinglemansweep@googlemail.com</value></constructor-arg>        
+        <constructor-arg name="xmpp_password"><value><![CDATA[]]></value></constructor-arg>        
     </object>
 
     <!-- Services -->
 
-    <object id="service" class="domestos.services.CoreService" scope="singleton">
+    <object id="service" class="domestos.services.CoreService" scope="singleton">        
+        <constructor-arg name="amqp_client"><ref object="amqp_client" /></constructor-arg>
         <constructor-arg name="dao"><ref object="sqlalchemy_dao" /></constructor-arg>
         <constructor-arg name="debug"><value>True</value></constructor-arg>
         <constructor-arg name="logger"><ref object="logger" /></constructor-arg>   
+        <constructor-arg name="cfg">
+            <dict>
+                <entry><key><value>app_name</value></key><value>domestos</value></entry>
+            </dict>
+        </constructor-arg>
         <constructor-arg name="plugins">
             <list>
                 <ref object="amqp_echo_plugin" />
                 <ref object="x10_controller_plugin" />
+                <ref object="xmpp_controller_plugin" />
             </list>
         </constructor-arg> 
     </object>

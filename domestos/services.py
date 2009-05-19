@@ -10,14 +10,16 @@ class CoreService(object):
   
     """ Core Service """
     
-    def __init__(self, dao, debug, logger, plugins):
+    def __init__(self, amqp_client, cfg, dao, debug, logger, plugins):
 
+        self.amqp_client = amqp_client
+        self.cfg = cfg
         self.dao = dao
         self.debug = debug
         self.logger = logger
         self.plugins = plugins
          
-        app_name = "domestos"
+        app_name = cfg["app_name"]
         home_folder = os.path.expanduser("~")
         cfg_folder = os.path.join(home_folder, ".%s" % (app_name))
     
@@ -35,7 +37,10 @@ class CoreService(object):
     def run(self):                              
                 
         for plugin_inst in self.plugins:
-            plugin_inst._start()
+            plugin_inst.amqp_client = self.amqp_client
+            plugin_inst.dao = self.dao
+            plugin_inst.logger = self.logger
+            plugin_inst.initialise()
 
         self.start_event_loop()
 
@@ -47,7 +52,7 @@ class CoreService(object):
         
         while True:    
             for plugin_inst in self.plugins:
-                plugin_inst._execute()
+                plugin_inst.execute()
                    
     
     
