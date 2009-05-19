@@ -13,7 +13,7 @@ chan = conn.channel()
 
 msg = amqp.Message(sys.argv[1])
 msg.properties["delivery_mode"] = 2
-chan.basic_publish(msg,exchange="exchange_core",routing_key="core")
+chan.basic_publish(msg, exchange="exchange", routing_key="x10.input")
 
 chan.close()
 conn.close()

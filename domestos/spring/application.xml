@@ -7,13 +7,15 @@
     <!-- Common -->
 
     <object id="logger" class="domestos.utils.LogSetup" scope="singleton">
-        <constructor-arg><value>domestos</value></constructor-arg>
+        <constructor-arg name="name"><value>domestos</value></constructor-arg>
+        <constructor-arg name="format_string"><value><![CDATA[[%(asctime)s] %(module)-10s%(levelname)-8s%(message)s]]></value></constructor-arg>
+        <constructor-arg name="datestamp_string"><value><![CDATA[%Y-%m-%d %H:%M:%S]]></value></constructor-arg>
     </object>
    
     <!-- Database -->
    		
     <object id="sqlalchemy_engine" class="sqlalchemy.create_engine" scope="singleton">
-        <constructor-arg><value>mysql://domestos:Dom3570$!@localhost/domestos?charset=utf8&amp;use_unicode=0</value></constructor-arg>
+        <constructor-arg><value><![CDATA[mysql://domestos:Dom3570$!@localhost/domestos?charset=utf8&amp;use_unicode=0]]></value></constructor-arg>
     </object>
 
     <object id="sqlalchemy_metadata" class="sqlalchemy.MetaData" scope="singleton" />
@@ -29,7 +31,7 @@
         <constructor-arg name="bind"><ref object="sqlalchemy_engine" /></constructor-arg> 
     </object>
 
-    <object id="sqlalchemy_dao" class="domestos.dao.CoreDAO">
+    <object id="sqlalchemy_dao" class="domestos.dao.CoreDAO" scope="singleton">
         <constructor-arg name="schema"><ref object="sqlalchemy_schema" /></constructor-arg>
         <constructor-arg name="session"><ref object="sqlalchemy_session" /></constructor-arg>
         <constructor-arg name="logger"><ref object="logger" /></constructor-arg>
@@ -47,7 +49,12 @@
 
     <!-- Plugins -->
 
-    <object id="amqp_plugin" class="domestos.plugins.AMQPEcho" scope="prototype">
+    <object id="amqp_echo_plugin" class="domestos.plugins.AMQPEcho" scope="prototype">
+        <constructor-arg name="amqp_connection"><ref object="amqp_connection" /></constructor-arg>
+        <constructor-arg name="logger"><ref object="logger" /></constructor-arg>
+    </object>
+
+    <object id="x10_controller_plugin" class="domestos.plugins.X10Controller" scope="prototype">
         <constructor-arg name="amqp_connection"><ref object="amqp_connection" /></constructor-arg>
         <constructor-arg name="logger"><ref object="logger" /></constructor-arg>
     </object>
@@ -60,7 +67,8 @@
         <constructor-arg name="logger"><ref object="logger" /></constructor-arg>   
         <constructor-arg name="plugins">
             <list>
-                <ref object="amqp_plugin" />
+                <ref object="amqp_echo_plugin" />
+                <ref object="x10_controller_plugin" />
             </list>
         </constructor-arg> 
     </object>

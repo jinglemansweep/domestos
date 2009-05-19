@@ -1,7 +1,6 @@
 import os
 import sys
 
-from amqplib import client_0_8 as amqp
 from optparse import OptionParser
 from springpython.config import Object, XMLConfig
 from springpython.context import ApplicationContext, scope
