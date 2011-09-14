@@ -2,6 +2,8 @@ from celery.task import Task
 
 class TestThing(Task):
 
+    _count = 1
+
     def __init__(self):
         self.name = "Louis"
         self.count = 1
