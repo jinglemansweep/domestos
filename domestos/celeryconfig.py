@@ -8,17 +8,32 @@ BROKER_VHOST= ""
 
 CELERY_RESULT_BACKEND = "amqp"
 
-CELERY_IMPORTS = ("plugins.echo.tasks",)
+CELERY_IMPORTS = (
+    "plugins.heartbeat.tasks", 
+    "plugins.test.tasks",
+    "plugins.cls.tasks",
+)
 
 CELERYBEAT_SCHEDULE = {
-    "runs-every-second": {
-        "task": "plugins.echo.tasks.echo",
-        "schedule": timedelta(seconds=1),
-        "args": ("Hello",)
+    "heartbeat.10s": {
+        "task": "plugins.heartbeat.tasks.echo",
+        "schedule": timedelta(seconds=10),
+        "args": (10,)
     },
-    "runs-every-second-again": {
-        "task": "plugins.echo.tasks.echo",
-        "schedule": timedelta(seconds=1),
-        "args": ("World",)
+    "heartbeat.1m": {
+        "task": "plugins.heartbeat.tasks.echo",
+        "schedule": timedelta(seconds=60),
+        "args": (60,)
+    },
+    "test.send_task": {
+        "task": "plugins.test.tasks.test_send_task",
+        "schedule": timedelta(seconds=10),
+        "args": ("plugins.heartbeat.tasks.echo", [999])
+    },
+    "cls.test": {
+        "task": "plugins.cls.tasks.TestThing",
+        "schedule": timedelta(seconds=2),
+        "args": ("Hello",)
     }
 }
+
