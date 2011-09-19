@@ -8,7 +8,7 @@ from mods.configurator.tasks import get_configuration
 @task(base=DTask)
 def get_remote_command():
     
-    cfg = get_configuration("lirc")
+    cfg = get_configuration.delay("lirc").wait()
     socket_name = cfg.get("lircd_socket", "/dev/lircd")
     
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)

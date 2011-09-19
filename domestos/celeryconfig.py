@@ -17,6 +17,7 @@ BROKER_PASSWORD = cfg.get("amqp").get("password", "guest")
 BROKER_VHOST = cfg.get("amqp").get("virtual_host", "")
 
 CELERY_RESULT_BACKEND = "amqp"
+CELERY_AMQP_TASK_RESULT_EXPIRES = 18000
 CELERY_CACHE_BACKEND = "memcached://127.0.0.1:11211/"
 
 CELERY_QUEUES = {"default": {"exchange": "default", "binding_key": "default"}}
