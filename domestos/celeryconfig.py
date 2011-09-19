@@ -26,3 +26,4 @@ task_imports = ["mods.%s.tasks" % (m) \
            and os.path.exists(os.path.join(MODULES_DIR, m, "tasks.py"))]
 CELERY_IMPORTS = tuple(task_imports)
 
+

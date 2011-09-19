@@ -2,6 +2,6 @@
 
 ./dev_build.sh
 cd domestos
-celeryd --purge -EB -l INFO -Q default,lirc,echo,heartbeat
+celeryd --discard -EB -l INFO
 cd -
 
