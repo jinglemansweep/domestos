@@ -1,39 +1,28 @@
-from datetime import timedelta
+import os
+import sys
+
+BASE_DIR = os.path.dirname(__file__)
+MODULES_DIR = os.path.join(BASE_DIR, "mods")
+
+sys.path.append(BASE_DIR)
+INSTALLED_APPS = "domestos"
 
 BROKER_HOST = "localhost"
 BROKER_PORT = 5672
 BROKER_USER = "guest"
 BROKER_PASSWORD = "guest"
-BROKER_VHOST= ""
+BROKER_VHOST = ""
 
 CELERY_RESULT_BACKEND = "amqp"
+CELERY_CACHE_BACKEND = "memcached://127.0.0.1:11211/"
 
-CELERY_IMPORTS = (
-    "plugins.heartbeat.tasks", 
-    "plugins.test.tasks",
-    "plugins.cls.tasks",
-)
+CELERY_QUEUES = {"default": {"exchange": "default", "binding_key": "default"}}
+CELERY_DEFAULT_QUEUE = "default"
+CELERY_ROUTES = ("routers.DomestosRouter", )
 
-CELERYBEAT_SCHEDULE = {
-    "heartbeat.10s": {
-        "task": "plugins.heartbeat.tasks.echo",
-        "schedule": timedelta(seconds=10),
-        "args": (10,)
-    },
-    "heartbeat.1m": {
-        "task": "plugins.heartbeat.tasks.echo",
-        "schedule": timedelta(seconds=60),
-        "args": (60,)
-    },
-    "test.send_task": {
-        "task": "plugins.test.tasks.test_send_task",
-        "schedule": timedelta(seconds=10),
-        "args": ("plugins.heartbeat.tasks.echo", [999])
-    },
-    "cls.test": {
-        "task": "plugins.cls.tasks.TestThing",
-        "schedule": timedelta(seconds=2),
-        "args": ("Hello",)
-    }
-}
+task_imports = ["mods.%s.tasks" % (m) \
+           for m in os.listdir(MODULES_DIR) \
+           if os.path.isdir(os.path.join(MODULES_DIR, m)) \
+           and os.path.exists(os.path.join(MODULES_DIR, m, "tasks.py"))]
+CELERY_IMPORTS = tuple(task_imports)
 
