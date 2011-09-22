@@ -3,7 +3,7 @@ import sys
 import yaml
 from socket import gethostname
 from xdg import BaseDirectory
-from celery.task import task
+
 
 
 def configure(app_name="domestos"):
