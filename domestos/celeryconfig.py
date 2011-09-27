@@ -11,7 +11,7 @@ sys.path.append(BASE_DIR)
 
 BROKER_BACKEND = "amqp"
 BROKER_HOST = cfg.get("amqp").get("host", "localhost")
-BROKER_PORT = cfg.get("amqp").get("port", 6379)
+BROKER_PORT = cfg.get("amqp").get("port", 5672)
 BROKER_USER = cfg.get("amqp").get("username", "guest")
 BROKER_PASSWORD = cfg.get("amqp").get("password", "guest")
 BROKER_VHOST = cfg.get("amqp").get("virtual_host", "")
