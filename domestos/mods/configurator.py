@@ -7,7 +7,7 @@ from utils import configure
 
 
 @task(base=DTask)
-def get_configuration(key, callback=None):
+def get_config(key, callback=None):
     cfg = configure()
     config_dir = cfg.get("general").get("config_dir")
     filename = os.path.join(config_dir, key + ".yml")

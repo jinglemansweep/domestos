@@ -11,7 +11,6 @@ class DomestosRouter(object):
 
         route = dict(queue=queue)
                     
-        print route
         return route
 
 
